@@ -1,0 +1,157 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Matematica per Immagini ai tempi del web</title>
+        <meta name="author" content="Gian Marco Todesco">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/reveal.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/theme/beige.css">
+                
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="reveal/plugin/highlight/monokai.css">
+        <!-- link rel="stylesheet" href="style.css" -->
+        <style>
+
+.whitebg {
+    background-color: white;
+}
+.reveal iframe.inside {
+    width:600px;
+    height:400px; 
+    border:solid 1px orange;
+}
+
+        </style>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+                    <h1>Matematica per immagini ai tempi del web</h1>
+
+                </section>
+				<section 
+                    data-background-iframe="pages/title/title.html" 
+                    data-background-interactive>
+                </section>
+
+				<section>
+                    <div style="display:flex;flex-direction: row">
+                        <img src="images/ascending-and-descending.jpg" style="height:700px">
+                        <div style="margin-left:80px;margin-top:2em;text-align: start">
+							<p><strong style="font-size:larger">Ascending and Descending</strong></p> 
+							<p style="font-size:smaller">1960 Litografia. 285mm x 355mm</p>
+							<p>Maurits Cornelis Escher</p>
+						</div>
+                    </div>
+				</section>
+
+                <!-- ascending & descending : lego -->
+				<section >
+                    <img src="images/ascending-and-descending-lego.jpg" style="height:700px">
+                    <p>http://www.andrewlipson.com/escher/ascending.html</p>
+                    <!--
+
+                    <p style="font-size:20px">http://www.andrewlipson.com/escher/ascending.html</p>
+                    <div style="display:flex; flex-direction:row; justify-content:center;">
+                         style="height:500px">
+                        <div style="font-size:20px; margin:10px">
+                            <p><strong>Andrew Lipson</strong></p>
+                        </div>
+                    </div>
+                    -->
+                        <!--
+
+                        <div style="display:flex;flex-direction:row;border:solid 4px teal;" class="stretch" >
+                            <img src="images/ascending-and-descending-lego.jpg" >
+                            <div style="display:flex; border:solid 2px teal;">
+                                <p><strong>Andrew Lipson</strong></p>
+                                <p>http://www.andrewlipson.com/escher/ascending.html</p>
+                            </div>
+                        </div>
+                        -->
+
+                </section>
+
+				<section 
+                    data-background-iframe="pages/stairs/stairs.html" 
+                    data-background-interactive>
+                </section>
+
+				<section>
+                    <p>Tolomeo (c. 100 - c. 170 AC)</p>
+                    <img src="images/Ptolemy.jpg" class="stretch">
+                </section>
+				<section>
+                    <p>Sistema tolemaico</p>
+                    <img src="images/Earth-Sun-Ptolemy.jpg" class="stretch">
+                </section>
+				<section>
+                    <p>Movimento di Venere rispetto alle stelle</p>
+                    <img src="images/venus.jpg" class="stretch">
+                </section>
+				<section
+                    data-background-iframe="pages/venus/venus.html" 
+                    data-background-interactive>
+                </section>
+				<section
+                    data-background-iframe="pages/epicycles-1/epicycles-1.html" 
+                    data-background-interactive>
+                </section>
+
+                <section>
+                    <p style="font-size:20px">Reconstruction of a planet's bizarre 
+                        orbit with Ptolemy's system of epicycles and deferents</p>
+                    <video data-autoplay data-src="videos/homer.mp4" controls="true"></video> 
+                    <p style="font-size:15px">Santiago Ginnobili</p>
+                </section>
+				<section
+                    data-background-iframe="pages/epicycles-2/epicycles-2.html" 
+                    data-background-interactive>
+                </section>
+                    
+
+
+
+                <section>
+                    <p class="url">https://gianmarco-todesco.github.io/toroidal-paradox/</p>
+                    <iframe class="stretch inside whitebg" 
+                        data-src="https://gianmarco-todesco.github.io/toroidal-paradox/"></iframe>
+                </section>
+
+				<!-- triangle_spiral -->
+				<section data-background-iframe="pages/triangle_spirals/triangle_spirals.html" data-background-interactive>
+				</section>
+
+				<!-- Martin Gardner - Op Art -->
+				<section>
+					<div style="display:flex;flex-direction: row" class="stretch">
+						<img src="images/three-bug-problem.png" >
+						<div style="margin-left:80px;margin-top:0; font-size:30px">
+							<p>Design based on the "three-bug problem"</p>
+							<p><strong style="font-size:larger">Book of Mathematical Diversions</strong></p> 
+							<p>§24 Op Art</p>
+							<p><i>Martin Gardner</i></p>
+							<p>drawing by Rutherford Boyd<br>for Scripta Mathematica</p>
+						</div>
+					</div>
+				</section>
+
+
+				<section>Numeri primi</section>
+                
+			</div>
+		</div>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/reveal.js"></script>
+		<script>
+			Reveal.initialize({
+				slideNumber: true,
+                hash: true,
+                history: true,
+                //width: "100%",
+                //height: "100%"
+			});
+		</script>
+	</body>
+</html>
+

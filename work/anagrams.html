@@ -1,0 +1,11 @@
+<h1>Anagrammi</h1>
+
+<script>
+function anagrammi(prefisso, parola) {
+  if(parola.length<=1) document.write(prefisso + parola + "<br/>")
+  else for(let i=0; i<parola.length; i++) 
+	anagrammi(prefisso + parola.substr(i,1), parola.substr(0,i)+parola.substr(i+1));
+}
+
+anagrammi('','ciao')
+</script>

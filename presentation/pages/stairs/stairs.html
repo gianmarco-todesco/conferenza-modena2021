@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Stair1</title>
+<meta charset="utf-8">
+<meta name="author" content="Gian Marco Todesco" />
+
+<script src="../libs/common.js"></script>
+<script src="js/three.min.js"></script>
+<script type="text/javascript" src="js/OrbitControls.js"></script>
+<script type="text/javascript" src="js/fred.js"></script>
+<script src="js/gmlib.js"></script>
+
+<style type="text/css">
+html, body { width:100%; height:100%; margin:0; padding:0;}
+canvas {width:100%;height:100%;}
+</style>
+</head>
+<body>
+    <canvas id="myCanvas"></canvas>
+		<script type="x-shader/x-vertex" id="vertexShader">
+
+			varying vec3 vWorldPosition;
+
+			void main() {
+
+				vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
+				vWorldPosition = worldPosition.xyz;
+
+				gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+			}
+
+		</script>
+
+		<script type="x-shader/x-fragment" id="fragmentShader">
+
+			uniform vec3 topColor;
+			uniform vec3 bottomColor;
+			uniform float offset;
+			uniform float exponent;
+
+			varying vec3 vWorldPosition;
+
+			void main() {
+
+				float h = normalize( vWorldPosition + offset ).y;
+				gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( max( h , 0.0), exponent ), 0.0 ) ), 1.0 );
+
+			}
+
+		</script>
+
+<script>
+
+const slide = { name: "stairs" };
+
+
+//
+// Utilities
+//
+THREE.Vector3.prototype.setLin = function(a,ka,b,kb) {
+    this.x = a.x*ka+b.x*kb;
+    this.y = a.y*ka+b.y*kb;
+    this.z = a.z*ka+b.z*kb;
+}
+
+function makeDot(position, color) {
+	var dot = new THREE.Mesh(new THREE.SphereGeometry(0.1,10,10), new THREE.MeshBasicMaterial({color:color}));
+	dot.position.copy(position);
+	return dot;
+}
+
+
+function MeshBuilder() {
+	this.geometry = new THREE.Geometry();
+}
+
+MeshBuilder.prototype.addVertex = function() {
+	var a = arguments;
+	var p;
+	if(a.length==1) p = a[0];
+	else p = new THREE.Vector3(a[0],a[1],a[2]);
+	p.index = this.geometry.vertices.length;
+	this.geometry.vertices.push(p);
+	return p;
+}
+
+MeshBuilder.prototype.addFace = function(pts, materialIndex) {
+	var f1 = new THREE.Face3(pts[0].index,pts[1].index,pts[2].index);
+    f1.materialIndex = materialIndex;	
+	this.geometry.faces.push(f1);
+	
+    this.geometry.faceVertexUvs[ 0 ].push( [
+						new THREE.Vector2( 0,0 ),
+						new THREE.Vector2( 1,0 ),
+						new THREE.Vector2( 1,1 )
+					] );	
+	if(pts.length==4) {
+		var f2 = new THREE.Face3(pts[0].index,pts[2].index,pts[3].index);
+        f2.materialIndex = materialIndex;	
+		this.geometry.faces.push(f2);
+		this.geometry.faceVertexUvs[ 0 ].push( [
+							new THREE.Vector2( 0,0 ),
+							new THREE.Vector2( 1,1 ),
+							new THREE.Vector2( 0,1 )
+						] );	
+		return [f1,f2];
+	}
+	else
+	{
+		return [f1];
+	}
+}
+	
+
+MeshBuilder.prototype.build = function() {
+	this.geometry.computeFaceNormals();
+	this.geometry.computeBoundingSphere();
+	return this.geometry;
+}
+
+//---------------------------------------------
+
+function StairsBuilder() {
+	this.builder = new MeshBuilder();
+	this.children = [];
+	this.stepPositions = [];
+    this.footPrints = [];
+    this.ballPrints = [];
+}
+
+StairsBuilder.prototype.addVertex = function() {
+	if(arguments.length==1) return this.builder.addVertex(arguments[0]);
+	var p = arguments[0];
+	var q = arguments[1];
+	if(typeof(q)=="number") 
+		return this.builder.addVertex(new THREE.Vector3().copy(p).setY(q));
+	else 
+		return this.builder.addVertex(new THREE.Vector3().copy(p).add(q));
+}
+
+StairsBuilder.prototype.start = function() {
+	
+	var p = new THREE.Vector3().copy(this.p0);
+	p.setY(p.y-this.dy);
+	p.add(new THREE.Vector3().copy(this.e0).multiplyScalar(this.b));
+
+	var v1 = new THREE.Vector3().copy(this.e1).multiplyScalar(this.b);	
+	var p1 = new THREE.Vector3().subVectors(p, v1);
+	var p2 = new THREE.Vector3().addVectors(p, v1);
+	
+	var vv = this.profile = [];
+	vv.push(this.addVertex(p1,this.y0));
+	vv.push(this.addVertex(p1));
+	vv.push(this.addVertex(p2));
+	vv.push(this.addVertex(p2,this.y0));
+	this.builder.addFace([vv[2],vv[1],vv[0],vv[3]], 0);
+}
+
+StairsBuilder.prototype.addStep = function(printOnly) {
+
+    printOnly = printOnly || false;
+    
+	var pf1 = this.profile;
+	var pf2 = [];
+	var v0 = new THREE.Vector3().copy(this.e0).multiplyScalar(this.a);
+	for(var j=0;j<4;j++) pf2.push(this.addVertex(pf1[j], v0));
+	var y = pf2[1].y-this.dy;
+	pf2.push(this.addVertex(pf2[1], y));
+	pf2.push(this.addVertex(pf2[2], y));
+
+	if(!printOnly) {
+        // faccia superiore
+        this.builder.addFace([pf1[1],pf1[2],pf2[2],pf2[1]],1);
+        
+        // gradino
+        this.builder.addFace([pf2[1],pf2[2],pf2[5],pf2[4]],2);
+
+        // lato sx (scendendo)
+        this.builder.addFace([pf1[1],pf2[1],pf2[4]],3);
+        this.builder.addFace([pf1[1],pf2[4],pf2[0],pf1[0]],3);
+            
+        // lato dx
+        this.builder.addFace([pf1[2],pf2[5],pf2[2]],4);
+        this.builder.addFace([pf1[2],pf1[3],pf2[3],pf2[5]],4);
+    }
+    
+    // punto medio del gradino, margine sinistro (scendendo)
+    var pa = new THREE.Vector3().copy(pf1[1]).lerp(pf2[1],0.5);
+    
+    // punto medio del gradino, margine destro (scendendo)
+    var pb = new THREE.Vector3().copy(pf1[2]).lerp(pf2[2],0.5);
+    
+    var footPrintT = 0.35;
+    if(this.footPrints.length%2==1) footPrintT = 1-footPrintT;        
+    this.footPrints.push(new THREE.Vector3().copy(pa).lerp(pb,footPrintT));
+    
+    this.ballPrints.push(new THREE.Vector3().copy(pa).lerp(pb,0.5));
+    
+	pf1[0] = pf2[0];
+	pf1[3] = pf2[3];
+	pf1[1] = pf2[4];
+	pf1[2] = pf2[5];		
+}
+
+StairsBuilder.prototype.addCorner = function(printOnly) {
+
+    printOnly = printOnly || false;
+    
+	var v0 = new THREE.Vector3().copy(this.e0).multiplyScalar(this.b*2);
+	var v1 = new THREE.Vector3().copy(this.e1).multiplyScalar(this.b*2);
+
+	var pf1 = this.profile;
+	var pf2 = [];
+	for(var j=0;j<4;j++) pf2.push(this.addVertex(pf1[j], v0));
+	var y = pf2[1].y-this.dy;
+	pf2.push(this.addVertex(pf1[1], y));
+	pf2.push(this.addVertex(pf2[1], y));
+
+    if(!printOnly)
+    {
+        // faccia superiore
+        this.builder.addFace([pf1[1],pf1[2],pf2[2],pf2[1]],0);
+        
+        // gradino
+        this.builder.addFace([pf2[1],pf2[5],pf2[4],pf1[1]],2);
+
+        // facce laterali
+        this.builder.addFace([pf1[2],pf1[3],pf2[3],pf2[2]],4);
+        this.builder.addFace([pf2[1],pf2[2],pf2[3],pf2[0]],4);
+    }
+    
+	// centro del corner
+	this.p1 = new THREE.Vector3().copy(pf1[1]).lerp(pf2[2],0.5);
+	
+	// this.children.push(makeDot(this.p1, 0xff00ff));
+
+    var footPrintT = 0.35;
+    if(this.footPrints.length%2==0) footPrintT = 1-footPrintT;        
+    
+    var footPrint = new THREE.Vector3().copy(pf1[1]).lerp(pf2[2],footPrintT);
+    this.footPrints.push(footPrint);
+    
+	this.ballPrints.push(new THREE.Vector3().copy(pf1[1]).lerp(pf2[2],0.5));
+	
+    //if(!printOnly) {
+        // pf1[0] = pf2[0]
+        pf1[1] = pf2[4];
+        pf1[2] = pf2[5];
+        pf1[3] = pf2[0];	
+
+        var tmp = this.e0;
+        this.e0 = this.e1.negate();
+        this.e1 = tmp;
+    //}
+}
+
+
+StairsBuilder.prototype.build = function() {
+
+	var stepCounts = [3,5,5,7]; // [3,5,6,6];
+  var L = [3,4,7,7];
+	var totL = 0, totStepCount = 0;
+	for(var i=0;i<4;i++) {
+		// totL += L[i];
+		totStepCount += stepCounts[i];
+	}
+	var dy = 0.15;
+	
+	var p0 = new THREE.Vector3(1,5,1);
+	var e0 = new THREE.Vector3(1,0,0);
+	var e1 = new THREE.Vector3(0,0,1);
+
+	var p1 = new THREE.Vector3().copy(p0);
+	p1.add(new THREE.Vector3().copy(e0).multiplyScalar(L[0]-L[2]));
+	p1.add(new THREE.Vector3().copy(e1).multiplyScalar(-L[1]+L[3]));
+	p1.setY(p1.y - (totStepCount+4)*dy);
+	
+	
+	var p = new THREE.Vector3().copy(p0);
+	p.add(new THREE.Vector3().copy(e0).multiplyScalar(L[0]));
+	p.setY(p.y - (stepCounts[0] + 1)*dy + 0.1);
+	//this.children.push(makeDot(p,0x00ffff));
+
+	p.add(new THREE.Vector3().copy(e1).multiplyScalar(-L[1]));
+	p.setY(p.y - (stepCounts[1] + 1)*dy);
+	//this.children.push(makeDot(p,0x00ffff));
+
+	p.add(new THREE.Vector3().copy(e0).multiplyScalar(-L[2]));
+	p.setY(p.y - (stepCounts[2] + 1)*dy);
+	//this.children.push(makeDot(p,0x00ffff));
+	
+	var cameraDist = 15.0;
+	var delta = new THREE.Vector3().copy(p0).sub(p1).normalize();
+    var cameraPos = new THREE.Vector3().copy(delta).multiplyScalar(cameraDist).add(p0);
+
+	var cameraTarget = new THREE.Vector3(0,1,0);
+	
+    factor = cameraPos.distanceTo(p1)/cameraPos.distanceTo(p0);
+	
+	this.p0 = p0;
+	this.p1 = p1;
+	this.e0 = e0;
+	this.e1 = e1;
+	// this.a = 0.5;
+	this.y0 = -60;
+	this.dy = dy;
+	
+	var b0 = 0.6;
+	var b1 = b0*Math.sqrt(factor);
+	var b2 = b0*factor;
+	var bs = [b0,b0,b0,b1,b2,b2];
+	this.b = b0;
+	this.start();	
+    
+	for(var k=0;k<4;k++) {
+		this.a = (L[k]-(bs[k+2]+bs[k]))/stepCounts[k];
+		for(var i=0;i<stepCounts[k];i++) this.addStep();
+		this.b = bs[k+2];
+		this.addCorner();
+	}
+    
+	var vv = this.profile;
+	this.builder.addFace([vv[2],vv[3],vv[0],vv[1]],2);
+	
+	// this.addStep(true);
+
+    var change = function(p, t) {
+        p.sub(cameraPos).multiplyScalar(t).add(cameraPos);
+    }
+    
+    var n = this.footPrints.length;
+    for(var i=0;i<3;i++) {
+        var p = new THREE.Vector3().copy(this.footPrints[i]);
+        change(p,factor);
+        this.footPrints.push(p);
+    }
+    var pts = [];
+    for(var i=0;i<3;i++) {
+        var p = new THREE.Vector3().copy(this.footPrints[n-3+i]);
+        change(p,1/factor);
+        pts.push(p);
+    }
+    this.footPrints.splice(0,0,pts[0],pts[1],pts[2]);
+    
+  	texture = THREE.ImageUtils.loadTexture('textures/crate.jpg', 
+		undefined, function() {renderer.render( scene, camera );}
+	);
+	// var texture = new THREE.Texture(crate) ;
+	
+	var materials = [
+		new THREE.MeshPhongMaterial({map: texture}),
+		new THREE.MeshLambertMaterial({map: texture}),
+		
+		
+		new THREE.MeshLambertMaterial({color:0x0000ff}),
+		new THREE.MeshLambertMaterial({color:0xffff00}),
+		new THREE.MeshLambertMaterial({color:0xff00ff}),
+		new THREE.MeshLambertMaterial({color:0x00ffff})		
+	];
+    var material = new THREE.MeshFaceMaterial( materials );
+	var stairs = new THREE.Mesh(this.builder.build(), material);
+	stairs.mydata = {};
+	stairs.mydata.p0 = p0;
+	stairs.mydata.p1 = this.p1;
+    stairs.mydata.cameraPos = cameraPos;
+	stairs.mydata.cameraTarget = cameraTarget;
+	
+	stairs.mydata.stepPositions = this.stepPositions;
+	stairs.mydata.footPrints = this.footPrints;
+	stairs.mydata.ballPrints = this.ballPrints;
+
+	for(var i=0;i<this.children.length;i++) 
+		stairs.add(this.children[i]);
+    //    var factor = cameraPos.distanceTo(p4)/cameraPos.distanceTo(p0);
+		
+	return stairs;
+}
+
+function makeMark(pos, color, factor) {
+	var g = new THREE.Geometry();
+	var rx = 0.6, rz = 0.6;
+	var coords = [-rx,-rz,rx,-rz,rx,rz,-rx,rz,-rx,-rz];
+	for(var i=0;i<coords.length;i+=2) {
+		var p = new THREE.Vector3(factor*coords[i],0.01,factor*coords[i+1]);
+		g.vertices.push(p.add(pos));
+	}
+	var grid = new THREE.Line( g, new THREE.LineBasicMaterial({color:color}));
+	return grid;
+}
+
+function makeLine(p0, p1) {
+	var g = new THREE.Geometry();
+	var pa = p0.clone().lerp(p1,10);
+	var pb = p1.clone().lerp(p0,10);
+	g.vertices.push(pa);
+	g.vertices.push(pb);
+	var dx = new THREE.Vector3(0.1,0,0);
+	var dz = new THREE.Vector3(0,0,0.1);
+	var dy = new THREE.Vector3(0,0.01,0);
+	g.vertices.push(p0.clone().add(dx).add(dy));
+	g.vertices.push(p0.clone().sub(dx).add(dy));
+	g.vertices.push(p0.clone().add(dz).add(dy));
+	g.vertices.push(p0.clone().sub(dz).add(dy));
+	g.vertices.push(p1.clone().add(dx).add(dy));
+	g.vertices.push(p1.clone().sub(dx).add(dy));
+	g.vertices.push(p1.clone().add(dz).add(dy));
+	g.vertices.push(p1.clone().sub(dz).add(dy));
+	
+	var mat = new THREE.LineBasicMaterial({color:0xffffff});
+	var line = new THREE.Line( g, mat, THREE.LinePieces);
+	return line;
+}
+
+
+//////////////////////
+// Global variables //
+//////////////////////
+var container, scene, camera, renderer, controls, stats; 
+var mark1, mark2, mark3, line;
+var walking = true;
+var scaleCorrectionEnabled = true;
+
+//---------------------------------------------------------
+//
+// Key controls
+//
+//---------------------------------------------------------
+function initKeyboardControls() {
+	GM.onKeyPress = function(e) {
+		if(e.keyCode == 49) { // 
+			mark1.visible = mark2.visible = mark3.visible = line.visible = false;
+		} 
+		else if(e.keyCode == 50) {
+			mark1.visible = mark2.visible = line.visible = true;
+			mark3.visible = false;
+		}		
+		else if(e.keyCode == 51) {
+			mark1.visible = mark2.visible = line.visible = true;
+			mark3.visible = true;
+		}		
+		else if(e.keyCode == 99) {
+			camera.position.copy(stairs.mydata.cameraPos);
+			camera.lookAt(stairs.mydata.cameraTarget);
+		}		
+		else if(e.keyCode == 115) { // s = start/stop
+			walking = !walking;
+		}		
+		else if(e.keyCode == 113) { // q = scale correction
+			scaleCorrectionEnabled = !scaleCorrectionEnabled;
+		}		
+		else
+		{
+			console.log("keycode=", e.keyCode);
+			return false;
+		}
+		return true;		
+	}	
+}	
+
+function updateRendererSize() {
+    var canvas = document.getElementById('myCanvas');
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    console.log(canvas.width, canvas.height);
+    camera.aspect = canvas.clientWidth / canvas.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+}
+
+function init() {
+
+  ///////////
+  // SCENE //
+  ///////////    
+  scene = new THREE.Scene();
+  //scene.fog = new THREE.FogExp2( 0xCCDDFF, 0.05 );        
+	scene.fog = new THREE.Fog( 0xCCDDFF, 15, 50  );     
+	
+	stairs = (new StairsBuilder()).build();	
+	scene.add(stairs);
+	stairs.receiveShadow = true;
+
+  ////////////
+  // CAMERA //
+  ////////////
+
+
+  var SCREEN_WIDTH = 1024, SCREEN_HEIGHT = 768;
+  var VIEW_ANGLE = 40, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 200;
+  
+  camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);
+  scene.add(camera);
+  
+  
+  var canvas = document.getElementById('myCanvas');
+  
+  
+
+  //////////////
+  // RENDERER //
+  //////////////
+  renderer = new THREE.WebGLRenderer( {
+      antialias:true, 
+      clearColor: 0x000000, 
+      canvas: canvas } );
+  updateRendererSize();
+
+  
+  window.addEventListener('resize', updateRendererSize, false);
+
+  renderer.shadowCameraNear = 1;
+  renderer.shadowCameraFar = 200;
+  renderer.shadowCameraFov = 30;
+
+  renderer.shadowMapBias = 0.0039;
+  renderer.shadowMapDarkness = 0.5;
+  renderer.shadowMapWidth = 1024;
+  renderer.shadowMapHeight = 1024;
+
+  renderer.shadowMapEnabled = true;
+  renderer.shadowMapSoft = true;
+  
+  container = document.createElement( 'div' );
+  container.appendChild( renderer.domElement );
+  document.body.appendChild( container );
+  
+  //////////////
+  // CONTROLS //
+  //////////////
+
+  // controls = new THREE.TrackballControls( camera, renderer.domElement );
+  controls = new THREE.OrbitControls( camera, renderer.domElement );
+  controls.maxPolarAngle = Math.PI*0.6;
+  controls.target.copy(stairs.mydata.cameraTarget);
+  
+  ///////////
+  // STATS //
+  ///////////
+  
+
+  // displays current and past frames per second attained by scene
+  
+  /*
+  stats = new Stats();
+  stats.domElement.style.position = 'absolute';
+  stats.domElement.style.bottom = '10px';
+  stats.domElement.style.right = '10px';
+  stats.domElement.style.zIndex = 100;
+  container.appendChild( stats.domElement );
+  */
+
+  ///////////
+  // LIGHT //
+  ///////////
+        	
+	var ambient = new THREE.AmbientLight( 0x222222 );
+	scene.add( ambient );
+
+
+	light = new THREE.DirectionalLight( 0xffffff, 1.0);
+	light.position.set( 5,50,-8); // 13/3,50/3,-5/3 ); // 13,20,-5
+	scene.add( light );
+	light.castShadow = true;
+	//light.shadowCameraVisible = true;
+	light.shadowDarkness = 0.5;
+	light.shadowCameraRight     =  5;
+	light.shadowCameraLeft     = -5;
+	light.shadowCameraTop      =  5;
+	light.shadowCameraBottom   = -5;
+	light.shadowCameraNear = 30;
+
+
+  /*
+	light = new THREE.DirectionalLight( 0xff0000, 0.5 );
+	light.position.set( -20,10,-15 );
+	scene.add( light );
+  */
+
+  
+  hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
+  hemiLight.color.setHSL( 0.6, 1, 0.6 );
+  hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
+  hemiLight.position.set( 0, 500, 0 );
+  scene.add( hemiLight );
+  
+  var vertexShader = document.getElementById( 'vertexShader' ).textContent;
+  var fragmentShader = document.getElementById( 'fragmentShader' ).textContent;
+  var uniforms = {
+    topColor: 	 { type: "c", value: new THREE.Color( 0x0077ff ) },
+    bottomColor: { type: "c", value: new THREE.Color( 0xffffff ) },
+    offset:		 { type: "f", value: 33 },
+    exponent:	 { type: "f", value: 0.6 }
+  }
+	uniforms.topColor.value.copy( new THREE.Color( 0x000044 )  ); // hemiLight.color );
+
+				scene.fog.color.copy( uniforms.bottomColor.value );
+
+				var skyGeo = new THREE.SphereGeometry( 20, 32, 15 );
+				var skyMat = 
+          // new THREE.MeshBasicMaterial({color:0x00ff00});
+          new THREE.ShaderMaterial( { vertexShader: vertexShader, fragmentShader: fragmentShader, uniforms: uniforms, side: THREE.BackSide } );
+
+				var sky = new THREE.Mesh( skyGeo, skyMat );
+				scene.add( sky );
+
+        
+  //  var axes = new THREE.AxisHelper(500);
+  //  scene.add( axes );
+
+	light = new THREE.PointLight( 0xffffff, 0.3);
+	light.position.set( -30,5,40); // 13/3,50/3,-5/3 ); // 13,20,-5
+	scene.add( light );
+	
+	light = new THREE.PointLight( 0xffffff, 0.3);
+	light.position.set( 30,5,-40); // 13/3,50/3,-5/3 ); // 13,20,-5
+	scene.add( light );
+	
+	/*
+	sphere = new THREE.Mesh(
+	  new THREE.SphereGeometry(0.3,20,20), 
+	  new THREE.MeshPhongMaterial());
+	sphere.castShadow = true;
+	scene.add(sphere);
+	
+	*/
+	
+    body = new Body();
+	body.rotation.y = Math.PI/2;
+	body.position.set(1,1.5,0);
+    body.y = 1.4;
+	scene.add(body);
+	
+	body.footPrints = stairs.mydata.footPrints;
+	body.traverse( function ( object ) { object.castShadow = true; } );
+    /*
+	obj = new THREE.Mesh(myCylinderGeometry(1,1,2), 
+		new THREE.MeshLambertMaterial({color:0xffffff}));
+	scene.add(obj);
+	obj.position.set(4,6,-2);
+	*/
+	// body.footPrints = footPrintPositions;
+
+	
+	// texture = THREE.ImageUtils.loadTexture('test.png');
+    
+    var material1 = new THREE.MeshPhongMaterial( { 
+        ambient: 0xFF0303, 
+        color: 0xdddddd, 
+        specular: 0x009900, 
+        shininess: 30, 
+        shading: THREE.SmoothShading 
+    } );
+
+   
+    var material2 = new THREE.MeshBasicMaterial( { color:0x0000FF } );
+    var material3 = new THREE.MeshBasicMaterial( { color:0x00FF00 } );
+    
+    var material = new THREE.MeshFaceMaterial([material1, material2, material3]);
+    
+	camera.position.set(10,10,10);
+
+	
+	if(this.stairs) camera.position.copy(stairs.mydata.cameraPos);
+	camera.lookAt(new THREE.Vector3(0,-30,0));
+	
+	/*
+	var dot = new THREE.Mesh(new THREE.SphereGeometry(0.1,10,10), new THREE.MeshBasicMaterial({color:0xff0000}));
+	dot.position.copy(stairs.mydata.p0);
+	scene.add(dot);
+	
+	dot = new THREE.Mesh(new THREE.SphereGeometry(0.1,10,10), new THREE.MeshBasicMaterial({color:0x00ff00}));
+	dot.position.copy(stairs.mydata.p1);
+	scene.add(dot);
+	*/
+	    
+	    
+    ///////////
+    // plane //
+    ///////////
+    
+	var geometry = new THREE.PlaneBufferGeometry( 100, 100 );
+	var planeMaterial = new THREE.MeshLambertMaterial( { color: 0xccddff } );
+	// THREE.ColorUtils.adjustHSV( planeMaterial.color, 0, 0, 0.9 );
+
+	var ground = new THREE.Mesh( geometry, planeMaterial );
+
+	ground.scale.set( 100, 100, 100 );
+	ground.rotation.x = -Math.PI/2;
+	ground.position.set( 0, -20, 0 );
+
+	//ground.castShadow = false;
+	// ground.receiveShadow = true;
+
+	scene.add( ground );	
+	
+	mark1 = makeMark(stairs.mydata.p0, 0xff0000, 1);
+	scene.add(mark1);
+	mark2 = makeMark(stairs.mydata.p1, 0x00ff00, 1);
+	scene.add(mark2);
+	mark3 = makeMark(stairs.mydata.p1, 0x00ff00, factor);
+	scene.add(mark3);
+	mark1.visible = false;
+	mark2.visible = false;
+	mark3.visible = false;
+	
+	line = makeLine(stairs.mydata.p0, stairs.mydata.p1);
+	scene.add(line);
+	line.visible = false;
+	
+	initKeyboardControls();
+}
+
+var time = 0;
+var index = 0;
+
+function moveSphere(t)
+{
+	return;
+	while(t>=24.0) t-=24.0;
+	var s = t/24;
+	var sc = (1-s)*1 + s*factor;
+	sphere.scale.set(sc,sc,sc);
+
+	var vv = stairs.mydata.ballPrints;
+	var a = Math.floor(t);
+	var f = t-a;
+	var b = a+1;
+    if(a>=vv.length || b>=vv.length) return;
+	var p = new THREE.Vector3().copy(vv[a]).lerp(vv[b], f);
+	p.y += sc*(0.3*4*f*(1-f) + 0.3);
+	sphere.position.copy(p);
+}
+
+var walkTime = 0.0;
+
+
+function setWalkTime(t)
+{
+  if(t>=24.0) { while(t>=24.0) t-=24.0; }
+  else if(t<0.0) { while(t<0.0) t+=24.0; }
+  walkTime = t;
+  
+  var s = t/24;
+  var sc = scaleCorrectionEnabled ? ((1-s)*1 + s*factor) : 1;
+		
+  body.scale.set(sc,sc,sc);
+  body.y = 1.4 *sc;
+  body.animate(t + 2.5);
+}
+
+lastTime = new Date().getTime();
+flag = true;
+
+running = false;
+
+let resettingCamera = null;
+document.addEventListener('mouseup', () => {
+    let dist = stairs.mydata.cameraTarget.distanceTo(camera.position);
+    if(dist > 1.0e-6) {
+        camera.lookAt(stairs.mydata.cameraTarget);
+        resettingCamera = {
+            p0 : camera.position,
+            p1 : stairs.mydata.cameraPos,
+            t0 : performance.now(),
+            duration : dist * 100
+        };
+    }
+}, false);
+document.addEventListener('mousedown', () => {
+    resettingCamera = null;
+}, false);
+
+
+function animate() 
+{
+  var curTime = new Date().getTime();
+  var dt = (curTime - lastTime)*0.001;
+  lastTime = curTime;
+/*
+	moveSphere(time);
+ */
+ 
+  if(walking) {
+    setWalkTime(walkTime + 2.0*dt);
+	}
+	body.head.rotation.y = 0.6*Math.sin(curTime*0.001*4);
+	var q = 0.9;
+	var b = (Math.max(q,Math.sin(curTime*0.001*5))-q)/(1.0-q);
+	body.head.blink(b*0.7);
+   
+   
+  if(flag) controls.update();
+  
+  if(!flag) camera.lookAt(body.position);
+
+  // reset camera
+  if(resettingCamera) {
+      let t = (performance.now() - resettingCamera.t0)/resettingCamera.duration;
+      if(t > 1.0) camera.position.copy(stairs.mydata.cameraPos);
+      else {
+          t = 0.5*(1-Math.cos(Math.PI*t));
+          camera.position.lerp(stairs.mydata.cameraPos, t);
+      }
+
+  }
+
+  
+  if(running) requestAnimationFrame( animate );        
+  renderer.render( scene, camera );
+
+  if(window.stats) stats.update();
+  // console.log("stairs", new Date().getTime());
+
+}
+
+let initDone = false;
+function setup() {
+    console.log("uffa")
+    if(!initDone) { initDone = true; init(); }
+    updateRendererSize();
+    running = true;
+    animate();
+}
+
+function cleanup() {
+    running = false;
+}
+
+
+/*
+
+function startSlide() {
+  running = true;
+  animate();
+}
+
+function stopSlide() {
+  running = false;  
+}
+
+window.addEventListener("message", function(e) {
+    if(event.data == "slide:stop") { console.log("Stairs stopped"); running = false; }
+    else if(event.data == "slide:start") { console.log("Stairs started"); running = true; animate();}
+}, false);
+*/
+
+
+</script>
+
+</body>
+</html>
