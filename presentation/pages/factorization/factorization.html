@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en-US"><head>
+<title>Animated Factorization Diagrams – Data Pointed</title>
+
+<!-- link rel="stylesheet" href="style.css" type="text/css" -->
+<link rel="stylesheet" href="factor.css">
+
+<script type="text/javascript" src="factorization.js"></script>
+<script type="text/javascript" src="../libs/common.js"></script>
+
+</head>
+<body style="width: 100%; height: 100%">
+<div id="enchilada">
+
+<div id="frame">
+<div id="status1" style="opacity: 0.7;"><span class="number">49</span><br><span class="decomposition">7<span class="times">×</span>7</span></div>
+<div id="status2" style="opacity: 0.001;"><span class="number">50</span><br><span class="decomposition">5<span class="times">×</span>5<span class="times">×</span>2</span></div>
+<div id="controls">
+<button type="button" id="fast_backward" class="off"><canvas width="30" height="30"></canvas><canvas width="30" height="30"></canvas></button>
+<button type="button" id="play_backward" class="off"><canvas width="30" height="30"></canvas><canvas width="30" height="30"></canvas></button>
+<button type="button" id="stop" class="off"><canvas width="30" height="30"></canvas><canvas width="30" height="30"></canvas></button>
+<button type="button" id="play_forward" class="on"><canvas width="30" height="30"></canvas><canvas width="30" height="30"></canvas></button>
+<button type="button" id="fast_forward" class="off"><canvas width="30" height="30"></canvas><canvas width="30" height="30"></canvas></button>
+</div>
+<div id="credits">
+<a href="http://www.datapointed.net/2012/10/animated-factorization-diagrams/" onclick="window.open(this.href);return false;">About</a>
+</div>
+<canvas width="399" height="399" id="canvas" style="margin-left: -199px; margin-top: -199px;"></canvas>
+</div>
+</div>
+
+
+</body></html>
