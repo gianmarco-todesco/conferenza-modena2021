@@ -9,8 +9,8 @@ let width, height
 
 // ciclo principale: cancella il canvas e disegna il nuovo fotogramma
 function mainLoop () {
-    width = canvas.width
-    height = canvas.height
+    width = canvas.width = canvas.clientWidth;
+    height = canvas.height = canvas.clientHeight;
     ctx.clearRect(0, 0, width, height)
     ctx.save()
     ctx.translate(width / 2, height / 2)

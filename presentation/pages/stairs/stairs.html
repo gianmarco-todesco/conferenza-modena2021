@@ -12,12 +12,23 @@
 <script src="js/gmlib.js"></script>
 
 <style type="text/css">
-html, body { width:100%; height:100%; margin:0; padding:0;}
-canvas {width:100%;height:100%;}
+html, body { 
+    width:100%; 
+    height:100%; 
+    margin:0; 
+    padding:0;
+    box-sizing: content-box;
+}
+canvas {
+    width:100%;
+    height:100%;
+}
 </style>
 </head>
 <body>
     <canvas id="myCanvas"></canvas>
+
+
 		<script type="x-shader/x-vertex" id="vertexShader">
 
 			varying vec3 vWorldPosition;
@@ -466,7 +477,7 @@ function updateRendererSize() {
     console.log(canvas.width, canvas.height);
     camera.aspect = canvas.clientWidth / canvas.clientHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    renderer.setSize(canvas.width, canvas.height );
 }
 
 function init() {
@@ -487,14 +498,16 @@ function init() {
   ////////////
 
 
-  var SCREEN_WIDTH = 1024, SCREEN_HEIGHT = 768;
-  var VIEW_ANGLE = 40, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 200;
+  //var SCREEN_WIDTH = 1024, SCREEN_HEIGHT = 768;
+  var VIEW_ANGLE = 40, ASPECT = 16/9, NEAR = 0.1, FAR = 200;
   
   camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);
   scene.add(camera);
   
   
   var canvas = document.getElementById('myCanvas');
+  canvas.width = canvas.clientWidth;
+  canvas.height = canvas.clientHeight;
   
   
 
@@ -504,7 +517,8 @@ function init() {
   renderer = new THREE.WebGLRenderer( {
       antialias:true, 
       clearColor: 0x000000, 
-      canvas: canvas } );
+      canvas: canvas 
+  } );
   updateRendererSize();
 
   
@@ -522,9 +536,6 @@ function init() {
   renderer.shadowMapEnabled = true;
   renderer.shadowMapSoft = true;
   
-  container = document.createElement( 'div' );
-  container.appendChild( renderer.domElement );
-  document.body.appendChild( container );
   
   //////////////
   // CONTROLS //

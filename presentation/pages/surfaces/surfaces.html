@@ -1,0 +1,158 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="author" content="Gian Marco Todesco"/>
+<title>Surface viewer</title>
+<script src="../libs/common.js"></script>
+<script src="twgl-full_3.min.js"></script>
+<script src="shader_programs.js"></script>
+<script src="surface_viewer.js"></script>
+<style>
+html,body {margin:0; padding:0;height:100%; overflow:hidden; }
+canvas { width:100%; height:100%; touch-action: none;
+        cursor:pointer;}
+</style>
+</head>
+<body>
+<canvas id="surface-viewer"></canvas>
+
+<script>
+
+// Gian Marco Todesco
+// https://github.com/gianmarco-todesco/conferenza-righi
+//
+
+const slide = {
+    name: 'surfaces'
+}
+
+var viewer = new SurfaceViewer('surface-viewer');
+render = function() {
+    if(window.meter) meter.tickStart();
+    if(gl.NO_ERROR != gl.getError()) throw "uff";
+    viewer.drawScene();
+    if(gl.NO_ERROR != gl.getError()) throw "uff";
+    if(window.meter) meter.tick();
+}
+var formula = `
+
+float phi = u*2.*PI;
+float theta = v*2.*PI;
+
+float r1 = 1.0;
+float r2 = 0.5 + 0.02*sin(theta*13.0 + 5.0*phi)*u_cc[0] ;
+
+float q = (1.0-u_cc[2]) + u_cc[2]*sin(2.0*PI*u_time);
+r2 = r2 * (0.5 + u_cc[1]*sin(phi*5.0)*q) ;
+
+float csPhi = cos(phi), snPhi = sin(phi);
+float csTheta = cos(theta), snTheta = sin(theta);
+float r = r1 + r2*snTheta;
+p = vec3(r*csPhi,r*snPhi,r2*csTheta);
+`;
+
+viewer.setBody(formula);
+time = 0.0;
+var running = true;
+animate = function () {
+    
+    time += 0.01; time -= Math.floor(time);
+    viewer.uniforms.u_time = time;
+    render(); 
+    tick();
+    if(running) requestAnimationFrame(animate);
+}
+
+var targetState = 3;
+var state = 0;
+var parameters = [
+    [0,0,0],
+    [1,0,0],
+    [1,0.4,0],
+    [1,0.4,1.0],    
+];
+
+
+function setParameters(s) {
+    state = s;
+    var values;
+    var m = parameters.length;
+    if(state<=0) { 
+        state=0; 
+        values = parameters[0]; 
+    }
+    else if(state>=m-1) { 
+        state=m-1; 
+        values = parameters[m-1]; 
+    }
+    else {
+        var i = Math.floor(state);
+        var u = state - i;
+        values = [0,0,0];
+        for(var j=0;j<3;j++) {
+            values[j] = (1-u)*parameters[i][j] 
+                  + u*parameters[i+1][j];
+        }
+    }
+    for(var j=0;j<3;j++) {
+        viewer.uniforms.u_cc[j] = values[j];
+    }
+    
+}
+
+function tick() {
+    if(targetState>state) {
+        state += 0.01;
+        if(state>targetState) state=targetState;
+        setParameters(state);
+    } else if(targetState<state) {
+        state -= 0.01;
+        if(state<targetState) state=targetState;
+        setParameters(state);
+    }
+
+}
+
+
+window.addEventListener('mousedown', 
+        function(e) {
+            if(!running) startSlide(); 
+            console.log("qui");
+            document.body.focus();
+        }, false);
+
+viewer.gl.canvas.addEventListener('mousedown',
+        function(e) {
+            document.body.focus();
+        }, false);
+        
+window.addEventListener("keydown", function(e) {
+    console.log(e);
+    if(e.keyCode == '38') { // up arrow
+        targetState --;
+        if(targetState<0)targetState=0;
+    }
+    else if(e.keyCode == '40') { // down arrow
+        targetState ++;
+        if(targetState>3)targetState=2;
+    }
+    else
+    {
+        
+    }
+});
+
+function setup() {
+	animate()
+}
+
+function cleanup() {
+	running = false;
+}
+
+
+
+</script>
+</body>
+</html>
