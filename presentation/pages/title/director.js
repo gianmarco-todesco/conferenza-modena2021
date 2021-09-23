@@ -307,6 +307,23 @@ const stages = [
         actors: ['sissid-p']
     },
     {
+        actors: [],
+        start : () => { 
+            slide.tangled.setEnabled(true); 
+            slide.tangled.parent = slide.modelPivot;
+            slide.isSpinning = true;
+        },
+        stop : () => {
+            slide.tangled.setEnabled(false); 
+            slide.tangled.parent = null;
+            slide.isSpinning = true;
+            return true;
+        }
+    },
+    {
+        actors: ['sissid-p']
+    },
+    {
         actors: ['sissid']
     },
     {

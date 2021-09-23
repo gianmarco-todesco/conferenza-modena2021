@@ -439,7 +439,8 @@ var scaleCorrectionEnabled = true;
 //
 //---------------------------------------------------------
 function initKeyboardControls() {
-	GM.onKeyPress = function(e) {
+    document.addEventListener('keypress', (e) => {
+        console.log(e);
 		if(e.keyCode == 49) { // 
 			mark1.visible = mark2.visible = mark3.visible = line.visible = false;
 		} 
@@ -467,7 +468,7 @@ function initKeyboardControls() {
 			return false;
 		}
 		return true;		
-	}	
+	});
 }	
 
 function updateRendererSize() {
@@ -781,6 +782,8 @@ document.addEventListener('mouseup', () => {
 }, false);
 document.addEventListener('mousedown', () => {
     resettingCamera = null;
+    window.focus();
+    console.log(window,document);
 }, false);
 
 

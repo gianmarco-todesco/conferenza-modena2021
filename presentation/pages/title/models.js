@@ -440,3 +440,36 @@ class StarModel {
     }
 
 }
+
+
+
+function loadTangled() {
+    const scene = slide.scene;
+    texture = new BABYLON.DynamicTexture('texture', {
+        width:1024, 
+        height:1024
+    }, scene);
+			
+    let ctx = texture.getContext();
+    var grd = ctx.createLinearGradient(0, 0, 1024, 0);
+    grd.addColorStop(0.4, "orange");
+    grd.addColorStop(0.49, "white");
+			
+    grd.addColorStop(0.52, "white");
+    grd.addColorStop(0.6, "teal");
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0,1024,1024);
+    texture.update();
+	
+    BABYLON.SceneLoader.Append("./data/", "fig8a.obj", scene, 
+        (scene) => {
+            
+            let obj = scene.meshes[scene.meshes.length-1];
+            obj.material = new BABYLON.StandardMaterial('mat', scene);
+            obj.material.diffuseTexture = texture;
+            slide.tangled = obj;
+            obj.setEnabled(false);
+            obj.scaling.set(0.5,0.5,0.5);
+
+    });
+}

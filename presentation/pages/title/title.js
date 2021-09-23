@@ -30,6 +30,12 @@ function setup() {
     const light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 10, 1), scene)
     const light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 0, 0), scene)
     light2.parent = camera
+    light1.intensity = 0.9;
+    light2.intensity = 0.9;
+    
+    slide.light1 = light1;
+    slide.light2 = light2;
+    
 
     populateScene()
     handlePointer()
@@ -40,6 +46,7 @@ function setup() {
     window.addEventListener("resize", onResize)
     console.log("QUA: ", performance.now() - start);
     slide.oldT = performance.now();
+    
 }
 
 function onResize() {
@@ -153,5 +160,6 @@ function populateScene()
     const scene = slide.scene
     slide.modelPivot = new BABYLON.TransformNode('model-pivot', scene);   
     slide.director = createDirector();
+    loadTangled();
 }
 
