@@ -37,6 +37,15 @@
                     0 3px 5px rgb(0 0 0 / 20%), 0 5px 10px rgb(0 0 0 / 25%), 
                     0 20px 20px rgb(0 0 0 / 15%);
             }
+            .reference {
+                position:absolute;
+                left:0;
+                bottom:0;
+                width:100%;
+                transition: left 1s;
+                font-size:30px;
+                text-align: center;
+            }
         </style>
         <script src="https://cdn.babylonjs.com/babylon.js"></script>
         <script src="../libs/common.js"></script>        
@@ -47,6 +56,7 @@
     <body>
         <canvas id="renderCanvas" touch-action="none"></canvas> 
         <h1 id="title">Matematica per immagini<br/>ai tempi del web</h1>
+        <p id="credits" class="reference">Gian Marco Todesco - gianmarco.todesco@gmail.com</p> 
         <!-- touch-action="none" for best results from PEP -->
     </body>
 </html>
