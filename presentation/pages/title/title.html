@@ -46,11 +46,21 @@
                 font-size:30px;
                 text-align: center;
             }
+            #garbuglio {
+                visibility: hidden;
+                position: absolute;
+                width:600px;
+                height:400px;
+                border:solid 2px orange;
+
+            }
         </style>
         <script src="https://cdn.babylonjs.com/babylon.js"></script>
         <script src="../libs/common.js"></script>        
         <script src="../libs/gutil.js"></script>        
         <script src="../libs/polyhedra-data.js"></script>        
+        <script src="models.js"></script>        
+        <script src="director.js"></script>        
         <script src="title.js"></script>        
     </head>
     <body>
@@ -58,5 +68,8 @@
         <h1 id="title">Matematica per immagini<br/>ai tempi del web</h1>
         <p id="credits" class="reference">Gian Marco Todesco - gianmarco.todesco@gmail.com</p> 
         <!-- touch-action="none" for best results from PEP -->
+
+        <!-- iframe id="garbuglio" src="https://gianmarco-todesco.github.io/3d-experiments/garbuglio/"></iframe -->
+
     </body>
 </html>
