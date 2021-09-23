@@ -1,4 +1,6 @@
-let canvas, ctx, running;
+let canvas, ctx, running = false;
+let showSun = true;
+let showSegmentTrail = false;
 
 const slide = {
     name: "venus"
@@ -34,6 +36,8 @@ function circle(x,y,r,strokeColor,fillColor=null) {
 
 let segmentTrail = [];
 let tickCount = 0;
+let qt;
+
 
 function animate() {
     if(!running) return;
@@ -49,7 +53,9 @@ function animate() {
     const venusPeriod = earthPeriod * 0.615;
 
     let t = performance.now();
-    let earthPhi = t * 2 * Math.PI / earthPeriod;
+    qt = Math.floor(1000.0 * t / earthPeriod);
+
+    let earthPhi = Math.PI * qt * 0.001;
     let venusPhi = t * 2 * Math.PI / venusPeriod;
     
 
@@ -63,12 +69,14 @@ function animate() {
         y : sun.y + venusRadius * Math.sin(venusPhi)
     };
 
-    if((tickCount%5)==0) {
+    if(showSegmentTrail && (qt%30)==0) {
         segmentTrail.push({x0:earth.x, y0:earth.y, x1:venus.x, y1:venus.y});
         let maxLength = 1000;
-        if(segmentTrail.length > maxLength) segmentTrail.splice(0,segmentTrail.length-maxLength);
-    
+        if(segmentTrail.length > maxLength) segmentTrail.splice(0,segmentTrail.length-maxLength);    
     }
+    if(!showSegmentTrail && segmentTrail.length>0) {
+        segmentTrail.splice(0,1);      
+    } 
 
     ctx.clearRect(0,0,w,h);
     ctx.save();
@@ -87,7 +95,7 @@ function animate() {
     }
 
     // sun
-    circle(sun.x,sun.y,30,'black','yellow');
+    if(showSun) circle(sun.x,sun.y,30,'black','yellow');
 
     // orbits
     circle(sun.x,sun.y,venusRadius,'gray');
@@ -104,5 +112,16 @@ function animate() {
     requestAnimationFrame(animate);
 }
 
+function setup() {
+    init();
+    animate();
+}
 
-animate();
+function cleanup() {
+    running = false;
+}
+
+document.addEventListener('keydown', (e) => {
+    console.log(e);
+    if(e.key=="s") showSegmentTrail = showSun = !showSegmentTrail;
+}, false);
