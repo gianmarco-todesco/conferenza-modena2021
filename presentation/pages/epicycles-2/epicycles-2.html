@@ -6,33 +6,65 @@
         <meta name="viewport" content="width=device-width,initial-scale=1.0, maximum-scale=1.0,user-scalable=no">
         <title>Epicycles</title>
         <!--link rel="stylesheet" type="text/css" href="style.css" -->
+        <style>
+            body, html {
+                width:100%;
+                height:100%;
+                margin:0;
+                padding:0;
+                box-sizing: content-box;
+
+            }
+            .container {
+                display:flex;
+                flex-direction:column;
+                height:100%;
+                
+
+            }
+            #header, #footer {
+                flex-grow: 0;
+            }
+            #c {
+                flex-grow: 1;
+                border:solid 1px gray;
+                box-shadow: 10px 10px 10px rgb(200,200,200);
+                margin:10px;
+            }
+        </style>
     </head>
     <body>
         <div class="container">
-        <h1>Epicycles calculator</h1>
-        <p>A chain of <a href="https://en.wikipedia.org/wiki/Deferent_and_epicycle">epicycles</a>, each rotating at constant angular speed, can draw 
-            very complex shapes. <a href="https://en.wikipedia.org/wiki/Ptolemy">Ptolemy</a> (90 – 168 A.D.) used this idea to represent
-            planet orbits. Try to draw something yourself!</p>
-        <p>Click & draw with the mouse in the square area below and draw a closed curve.</p>
-        <p>
-            Speed: 
-                <button onclick="app.changeSpeed(1)">+</button>
-                <button onclick="app.changeSpeed(-1)">-</button> &nbsp;
-            Zoom: 
-                <button onclick="app.viewer.zoomin()">+</button>
-                <button onclick="app.viewer.zoomout()">-</button> &nbsp;
-            Min radius: <span id="min-radius">0</span>
-                <button onclick="app.changePrecision(1)">+</button>
-                <button onclick="app.changePrecision(-1)">-</button> &nbsp;
-                <span id="circle-count"></span>
-            
-        </p>
-        <canvas width="600" height="600" id="c"></canvas>
-        <p>
-            Source code <a href="https://github.com/gianmarco-todesco/epicycles">here</a>.
-            This work is licensed under a MIT Licence.
-        </p>
-        <footer>Epicycles, 2020 - Gian Marco Todesco</footer>        
+            <div id="header">
+                <h1>Epicycles calculator</h1>
+                <p>A chain of <a href="https://en.wikipedia.org/wiki/Deferent_and_epicycle">epicycles</a>, each rotating at constant angular speed, can draw 
+                    very complex shapes. <a href="https://en.wikipedia.org/wiki/Ptolemy">Ptolemy</a> (90 – 168 A.D.) used this idea to represent
+                    planet orbits. Try to draw something yourself!</p>
+                <p>Click & draw with the mouse in the square area below and draw a closed curve.</p>
+                <p>
+                    Speed: 
+                        <button onclick="app.changeSpeed(1)">+</button>
+                        <button onclick="app.changeSpeed(-1)">-</button> &nbsp;
+                    Zoom: 
+                        <button onclick="app.viewer.zoomin()">+</button>
+                        <button onclick="app.viewer.zoomout()">-</button> &nbsp;
+                    Min radius: <span id="min-radius">0</span>
+                        <button onclick="app.changePrecision(1)">+</button>
+                        <button onclick="app.changePrecision(-1)">-</button> &nbsp;
+                        <span id="circle-count"></span>
+                    
+                </p>
+        
+            </div>
+            <canvas id="c"></canvas>
+            <div id="footer">
+                <p>
+                    Source code <a href="https://github.com/gianmarco-todesco/epicycles">here</a>.
+                    This work is licensed under a MIT Licence.
+                </p>
+                <footer>Epicycles, 2020 - Gian Marco Todesco</footer>        
+        
+            </div>
         </div>
         <script src="epicycles-2.js"></script>
     </body>

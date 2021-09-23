@@ -452,11 +452,11 @@ function loadTangled() {
 			
     let ctx = texture.getContext();
     var grd = ctx.createLinearGradient(0, 0, 1024, 0);
-    grd.addColorStop(0.4, "orange");
-    grd.addColorStop(0.49, "white");
+    grd.addColorStop(0.4, "rgb(200,129,0)");
+    grd.addColorStop(0.49, "rgb(180,180,180)");
 			
-    grd.addColorStop(0.52, "white");
-    grd.addColorStop(0.6, "teal");
+    grd.addColorStop(0.52, "rgb(180,180,180)");
+    grd.addColorStop(0.6, "rgb(0,100,100");
     ctx.fillStyle = grd;
     ctx.fillRect(0,0,1024,1024);
     texture.update();
@@ -469,7 +469,8 @@ function loadTangled() {
             obj.material.diffuseTexture = texture;
             slide.tangled = obj;
             obj.setEnabled(false);
-            obj.scaling.set(0.5,0.5,0.5);
+            let sc = 0.75;
+            obj.scaling.set(sc,sc,sc);
 
     });
 }
