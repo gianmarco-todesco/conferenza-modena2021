@@ -9,6 +9,7 @@ let stop=false, tt;
 let position = 0;
 let speed = 0;
 let lastTime;
+let autoZoom = true;
 
 const slide = {
     name:"fibonacci"
@@ -97,13 +98,21 @@ for(let i=0; i<50; i++) addStep();
 
 function draw() {
     if(stop) return;
-    let unit = 10.0 * Math.pow(1.61803398875,-position);
-
     let curTime =  performance.now();
     let dt = curTime - lastTime;
     lastTime = curTime;
 
+    if(autoZoom) {
+        if(speed < 1.0) speed = Math.min(1.0, speed + dt*0.002);
+    } else {
+        if(speed > 0.0) speed = Math.max(0.0, speed - dt*0.002);
+    }
+
+
     position += speed * dt *0.001;
+    let unit = 10.0 * Math.pow(1.61803398875,-position);
+
+
 
     /*
 
@@ -138,7 +147,7 @@ function draw() {
         let r = unit * Math.sqrt(center[0]*center[0]+center[1]*center[1]);
         if(z>0 && r<1) continue;
         if(r>limit2) break;
-
+        ctx.strokeStyle = "black";
         ctx.beginPath();
         ctx.moveTo(pts[0]*unit,pts[1]*unit);
         for(let i=2; i+1<pts.length;i+=2) {
@@ -152,12 +161,20 @@ function draw() {
         ctx.strokeStyle = 'gray';
         ctx.stroke();
 
-        if((w+h)*unit>100) {
-            ctx.font = '20px arial';
+        ctx.font = '20px arial';
+            
+        let text = ""+value;
+        let textWidth = ctx.measureText(text).width;
+        let textHeight = 20;
+        let squareSize = unit*value*2;
+        let limit = squareSize * 0.8;
+        if(textWidth < limit && textHeight < limit) {
             ctx.fillStyle = "black";
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(value, center[0]*unit,center[1]*unit);
+            ctx.fillText(text, center[0]*unit,center[1]*unit);
+            
+            
         }
     }
 
@@ -166,7 +183,7 @@ function draw() {
 document.addEventListener('keydown', (e) => {
     console.log(e);
     if(e.key=="s") {
-        speed = speed == 0.0 ? 1.0 : 0.0;
+        autoZoom = !autoZoom;
     }
 }, false);
 

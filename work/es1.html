@@ -1,0 +1,45 @@
+<head>
+
+    <style>
+        table { margin:20px; border:solid 2px black }
+        td { border:solid 1px gray;}
+
+    </style>
+</head>
+<body>
+    <h1>8 Regine</h1>
+</body>
+<script>
+
+    function regine(L,n) {
+        if(L.length == n) {
+            let tb = document.createElement('table')
+            document.body.appendChild(tb)
+            for(let y=0; y<n; y++) {
+                let row = document.createElement('tr')
+                tb.appendChild(row)
+                for(let x=0; x<n; x++) {
+                    let cell = document.createElement('td')
+                    row.appendChild(cell)
+                    if(L[x]==y) cell.innerHTML = "O"
+                }                
+            }
+        } else {
+            let x = L.length
+            let proibiti = {}
+            L.forEach((yj,xj) => {
+                proibiti[yj] = 
+                proibiti[yj+x-xj] = 
+                proibiti[yj-x+xj] = true
+            })
+            for(let y=0; y<n; y++) {
+                if(!proibiti[y]) {
+                    regine([...L,y],n)
+                }
+            }
+        }
+    }
+
+    regine([],8)
+
+</script>

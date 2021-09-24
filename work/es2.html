@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            canvas {
+                box-shadow: 10px 10px 10px gray;
+                border:solid 1px gray;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="c" width="500" height="500"></canvas>
+        <script>
+
+let canvas = document.getElementById('c')
+let ctx = canvas.getContext('2d');
+let w = canvas.width, h = canvas.height;
+
+let balls = []
+for(let i=0;i<50;i++) {
+    balls.push({ 
+        x : w*Math.random(), 
+        y : h*Math.random(),
+        vx : Math.random()*2-1,
+        vy : Math.random()*2-1
+    })
+}
+
+
+function draw() {
+    ctx.clearRect(0,0,w,h)
+    const maxDist = 100;
+    for(let i=0; i<balls.length; i++) {
+        let bi = balls[i];
+        for(let j=i+1; j<balls.length; j++) {
+            let bj = balls[j]
+            let dx = bi.x - bj.x, dy = bi.y - bj.y
+            let d = Math.sqrt(dx*dx+dy*dy)
+            if(d<maxDist) {
+                ctx.globalAlpha = 1.0 - d/maxDist
+                ctx.beginPath()
+                ctx.moveTo(bi.x,bi.y)
+                ctx.lineTo(bj.x,bj.y)
+                ctx.strokeStyle = 'black'
+                ctx.stroke()
+            }
+        }
+    }
+    ctx.globalAlpha = 1;
+    balls.forEach(b=>{
+        ctx.beginPath();
+        ctx.arc(b.x,b.y,5,0,2*Math.PI)
+        ctx.strokeStyle = "black";
+        ctx.fillStyle = "gray";
+        ctx.fill();
+        ctx.stroke();
+    })
+}
+
+function animate() {
+    let dt = 1;
+    balls.forEach(b=>{
+        b.x += dt * b.vx
+        b.y += dt * b.vy
+        if(b.x<0 || b.x>w) b.vx = -b.vx
+        if(b.y<0 || b.y>w) b.vy = -b.vy
+    })
+    draw()
+    requestAnimationFrame(animate)      
+}
+animate();
+
+
+        </script>
+    </body>
+</html>

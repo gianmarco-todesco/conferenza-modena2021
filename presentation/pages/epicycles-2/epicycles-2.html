@@ -17,30 +17,39 @@
             }
             .container {
                 display:flex;
-                flex-direction:column;
-                height:100%;
+                flex-direction:row;
+                align-items: flex-start;
+                justify-content: center;
                 
 
             }
-            #header, #footer {
-                flex-grow: 0;
-            }
             #c {
-                flex-grow: 1;
+                flex-grow: 0;
                 border:solid 1px gray;
                 box-shadow: 10px 10px 10px rgb(200,200,200);
-                margin:10px;
+                margin:0;
+                width:900px;
+                height:900px;
+            }
+            #right-column {
+                flex-grow: 1;
+                display:flex;
+                flex-direction:column;
+                margin-left:50px;
+                padding-top:70px;
+                padding-right: 50px;
+            }
+            #left-column {
+                flex-grow: 1;
+                display:flex;
+                flex-direction:column;
+                padding:50px;
             }
         </style>
     </head>
     <body>
         <div class="container">
-            <div id="header">
-                <h1>Epicycles calculator</h1>
-                <p>A chain of <a href="https://en.wikipedia.org/wiki/Deferent_and_epicycle">epicycles</a>, each rotating at constant angular speed, can draw 
-                    very complex shapes. <a href="https://en.wikipedia.org/wiki/Ptolemy">Ptolemy</a> (90 – 168 A.D.) used this idea to represent
-                    planet orbits. Try to draw something yourself!</p>
-                <p>Click & draw with the mouse in the square area below and draw a closed curve.</p>
+            <div id="left-column">
                 <p>
                     Speed: 
                         <button onclick="app.changeSpeed(1)">+</button>
@@ -54,10 +63,17 @@
                         <span id="circle-count"></span>
                     
                 </p>
-        
+                <canvas id="c"></canvas>
             </div>
-            <canvas id="c"></canvas>
-            <div id="footer">
+            <div id="right-column">
+
+                <h1>Epicycles calculator</h1>
+                <p>A chain of <a href="https://en.wikipedia.org/wiki/Deferent_and_epicycle">epicycles</a>, each rotating at constant angular speed, can draw 
+                    very complex shapes. <a href="https://en.wikipedia.org/wiki/Ptolemy">Ptolemy</a> (90 – 168 A.D.) used this idea to represent
+                    planet orbits. Try to draw something yourself!</p>
+                <p>Click & draw with the mouse in the square area below and draw a closed curve.</p>
+                
+        
                 <p>
                     Source code <a href="https://github.com/gianmarco-todesco/epicycles">here</a>.
                     This work is licensed under a MIT Licence.
